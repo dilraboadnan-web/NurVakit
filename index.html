@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NurVakit — Namaz Vakitleri</title>
+<meta name="theme-color" content="#0E3B2E">
+<meta name="description" content="NurVakit: Diyanet uyumlu namaz vakitleri, ezan sesi, kıble pusulası, zikirmatik, peygamberler ansiklopedisi ve dini günler.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --zumrut:#0E3B2E; --zumrut2:#155040; --zumrut3:#1D5F4C;
+  --altin:#C9A227; --altin-acik:#E4C965;
+  --fildisi:#F7F3E8; --soluk-yesil:#B9CCC3; --cizgi:#24604E;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Figtree',sans-serif;background:var(--zumrut);color:var(--fildisi);min-height:100vh;padding-bottom:86px;overflow-x:hidden}
+h1,h2,h3,.serif{font-family:'Marcellus',serif;font-weight:400}
+button{font-family:'Figtree',sans-serif}
+button:focus-visible,select:focus-visible{outline:3px solid var(--altin);outline-offset:2px}
+
+/* ============ AÇILIŞ EKRANI (toplam gösterim ~0.7 sn) ============ */
+#splash{position:fixed;inset:0;z-index:999;background:radial-gradient(ellipse at 50% 30%, #164a3a, #08201a 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease, visibility .35s ease;cursor:pointer}
+#splash.gizli{opacity:0;visibility:hidden;pointer-events:none}
+#splash .yildizlar{position:absolute;inset:0;overflow:hidden}
+#splash .yildiz{position:absolute;background:#fff;border-radius:50%;animation:twinkle 2.6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.15;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+#splash .splash-logo{width:88px;height:88px;position:relative;z-index:1;animation:splashPop .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes splashPop{0%{transform:scale(.4) rotate(-12deg);opacity:0}70%{transform:scale(1.08) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+#splash .splash-yazi{font-family:'Marcellus',serif;font-size:1.6rem;letter-spacing:.02em;position:relative;z-index:1;opacity:0;animation:fadeUp .4s ease .12s forwards}
+#splash .splash-yazi span{color:var(--altin-acik)}
+#splash .splash-alt{color:var(--soluk-yesil);font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;position:relative;z-index:1;opacity:0;animation:fadeUp .4s ease .2s forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#splash .splash-cubuk{width:110px;height:3px;background:rgba(228,201,101,.15);border-radius:99px;overflow:hidden;position:relative;z-index:1;margin-top:2px}
+#splash .splash-cubuk i{display:block;height:100%;width:40%;background:linear-gradient(90deg,transparent,var(--altin-acik),transparent);animation:cubukKay .8s ease-in-out infinite}
+#splash .splash-video-btn{position:relative;z-index:1;margin-top:10px;background:rgba(228,201,101,.12);border:1.5px solid rgba(228,201,101,.5);color:var(--altin-acik);border-radius:999px;padding:9px 20px;font-size:.85rem;font-weight:700;cursor:pointer;opacity:0;animation:fadeUp .4s ease .32s forwards;display:flex;align-items:center;gap:7px}
+#splash .splash-video-btn:hover{background:rgba(228,201,101,.22)}
+#splash .splash-atla{position:relative;z-index:1;margin-top:2px;color:rgba(185,204,195,.6);font-size:.72rem;opacity:0;animation:fadeUp .4s ease .4s forwards}
+@keyframes cubukKay{0%{transform:translateX(-120%)}100%{transform:translateX(280%)}}
+
+/* ============ RIPPLE (dokunma dalgası) ============ */
+.ripple{position:relative;overflow:hidden}
+.ripple-dalga{position:absolute;border-radius:50%;background:rgba(255,255,255,.45);transform:scale(0);animation:rippleAnim .55s ease-out forwards;pointer-events:none}
+@keyframes rippleAnim{to{transform:scale(2.6);opacity:0}}
+
+/* ============ SEKME GEÇİŞİ ============ */
+.sayfa{display:none;max-width:620px;margin:0 auto;padding:0 18px}
+.sayfa.acik{display:block;animation:sayfaGir .38s cubic-bezier(.22,1,.36,1)}
+@keyframes sayfaGir{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.sirala-giris{opacity:0;animation:kartGir .5s ease forwards}
+@keyframes kartGir{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ============ YILDIZLI SONRAKİ-VAKİT KARTI ============ */
+.sonraki{position:relative}
+.sonraki .yildiz-katman{position:absolute;inset:0;overflow:hidden;border-radius:26px}
+.sonraki .yildiz-katman span{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s ease-in-out infinite}
+.hilal-suzulen{position:absolute;top:10px;right:16px;font-size:1.1rem;opacity:.5;animation:suzul 6s ease-in-out infinite}
+@keyframes suzul{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(8deg)}}
+
+/* ============ SAYAÇ NABIZ ============ */
+.buyuk-saat{transition:transform .15s ease}
+.buyuk-saat.nabiz{animation:nabizVur .5s ease}
+@keyframes nabizVur{0%{transform:scale(1)}30%{transform:scale(1.06);color:var(--altin-acik)}100%{transform:scale(1)}}
+
+/* ============ SKELETON YÜKLEME ============ */
+.iskelet{background:linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.13) 37%, rgba(255,255,255,.05) 63%);background-size:400% 100%;animation:iskeletAkis 1.4s ease infinite;border-radius:8px;color:transparent!important}
+@keyframes iskeletAkis{0%{background-position:100% 50%}100%{background-position:0 50%}}
+
+/* ============ KONFETİ (zikir tamamlandığında) ============ */
+.konfeti-alan{position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden}
+.konfeti-parca{position:absolute;top:-10px;border-radius:2px;animation:konfetiDus linear forwards}
+@keyframes konfetiDus{to{transform:translateY(110vh) rotate(540deg);opacity:0}}
+
+/* ============ GENEL MİKRO-ETKİLEŞİM ============ */
+button{transition:transform .12s ease}
+button:active{transform:scale(.96)}
+.vakit,.foto,.dgun,.nebi-chip,.bilgi{transition:transform .18s ease, box-shadow .18s ease}
+.vakit:hover,.nebi-chip:hover{transform:translateY(-2px)}
+.vakit.aktif{animation:aktifParla 2.4s ease-in-out infinite}
+@keyframes aktifParla{0%,100%{box-shadow:0 0 0 0 rgba(201,162,39,.5)}50%{box-shadow:0 0 0 8px rgba(201,162,39,0)}}
+
+/* ============ TANITIM VİDEOSU ============ */
+.video-bolum{max-width:620px;margin:8px auto 30px;padding:0 18px}
+.video-ust{text-align:center;margin-bottom:14px}
+.video-ust .tug{font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+.video-cerceve{position:relative;aspect-ratio:16/9;background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:22px;overflow:hidden;box-shadow:0 10px 32px rgba(0,0,0,.28)}
+.video-cerceve video{width:100%;height:100%;object-fit:cover;display:none}
+.video-cerceve video.hazir{display:block}
+.video-yer-tutucu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:20px}
+.video-yer-tutucu.gizli{display:none}
+.ytp-ikon{font-size:2.2rem;opacity:.7;animation:ytpNabiz 2.2s ease-in-out infinite}
+@keyframes ytpNabiz{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.1);opacity:.9}}
+.video-yer-tutucu p{color:var(--fildisi);font-weight:600;font-size:.95rem}
+.video-yer-tutucu small{color:var(--soluk-yesil);font-size:.8rem}
+
+/* ============ EK CİLA: nabızlı kart kenarlığı, ikon zıplaması, arka plan hareketi ============ */
+body{background:linear-gradient(160deg, var(--zumrut) 0%, #0c342a 100%);background-size:100% 200%;animation:zeminAkis 18s ease-in-out infinite}
+@keyframes zeminAkis{0%,100%{background-position:0% 0%}50%{background-position:0% 100%}}
+.sonraki{animation:kenarParilti 5s ease-in-out infinite}
+@keyframes kenarParilti{0%,100%{box-shadow:0 0 0 0 rgba(201,162,39,0)}50%{box-shadow:0 0 26px 2px rgba(201,162,39,.14)}}
+nav button.aktif .i{animation:navZipla .4s cubic-bezier(.34,1.8,.64,1)}
+@keyframes navZipla{0%{transform:scale(1)}45%{transform:scale(1.35) translateY(-3px)}100%{transform:scale(1.12)}}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+  #splash{display:none!important}
+}
+
+/* ÜST BAR + LOGO */
+.ust{max-width:620px;margin:0 auto;padding:20px 18px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.marka{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;flex:none}
+.marka-yazi{font-family:'Marcellus',serif;font-size:1.2rem;line-height:1.1}
+.marka-yazi span{color:var(--altin-acik)}
+.marka-yazi small{display:block;font-family:'Figtree',sans-serif;font-size:.6rem;color:var(--soluk-yesil);letter-spacing:.22em;text-transform:uppercase}
+.konum-chip{display:flex;align-items:center;gap:6px;background:var(--zumrut2);border:1px solid #2A6350;border-radius:999px;padding:8px 14px;font-size:.88rem;cursor:pointer;color:var(--fildisi);max-width:210px}
+.konum-chip .yer{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+select{background:var(--zumrut2);color:var(--fildisi);border:1px solid #2A6350;border-radius:12px;padding:8px 11px;font-size:.9rem;cursor:pointer;display:none}
+select.goster{display:block}
+
+/* KONUM BANNER */
+.konum-banner{display:none;max-width:620px;margin:12px auto 0;padding:0 18px}
+.konum-banner.goster{display:block}
+.konum-banner button{width:100%;background:linear-gradient(120deg,#8A6E12,var(--altin));color:#20340A;border:none;border-radius:16px;padding:15px 18px;font-weight:800;font-size:.98rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.konum-banner small{display:block;font-weight:600;font-size:.78rem;margin-top:2px;opacity:.85}
+
+.tarih-satir{max-width:620px;margin:12px auto 0;padding:0 18px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--soluk-yesil);font-size:.9rem}
+.tarih-satir .hicri{color:var(--altin-acik)}
+.durum{max-width:620px;margin:10px auto;padding:0 18px;text-align:center;color:var(--soluk-yesil);font-size:.9rem;min-height:20px}
+.yukleniyor{animation:puls 1.2s ease-in-out infinite}
+@keyframes puls{0%,100%{opacity:.5}50%{opacity:1}}
+
+.cuma{display:none;margin-top:12px;background:linear-gradient(120deg,#7A5F0F,var(--altin));color:#20340A;border-radius:18px;padding:13px 18px;text-align:center;font-weight:800;font-size:.98rem}
+.cuma.goster{display:block}
+
+/* --- VAKİTLER --- */
+.sonraki{background:linear-gradient(160deg,var(--zumrut2),var(--zumrut3));border:1px solid #2A6350;border-radius:26px;padding:26px 22px;text-align:center;position:relative;overflow:hidden;margin-top:14px}
+.sonraki::before{content:"";position:absolute;inset:0;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 80 80'%3E%3Cpath d='M40 0L49 22L71 13L62 35L80 40L62 45L71 67L49 58L40 80L31 58L9 67L18 45L0 40L18 35L9 13L31 22Z' fill='%23E4C965'/%3E%3C/svg%3E");background-size:70px 70px}
+.sonraki>*{position:relative}
+.canli-saat{font-family:'Marcellus',serif;font-size:clamp(1.9rem,7vw,2.6rem);color:var(--fildisi);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.canli-saat .salise{font-size:.55em;color:var(--altin-acik)}
+.canli-saat-alt{color:var(--soluk-yesil);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
+.sonraki .etiket{color:var(--soluk-yesil);font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;border-top:1px solid rgba(255,255,255,.09);padding-top:14px}
+.sonraki .vakit-adi{font-family:'Marcellus',serif;font-size:1.7rem;color:var(--altin-acik);margin-top:4px}
+.buyuk-saat{font-family:'Marcellus',serif;font-size:clamp(2.6rem,10vw,3.8rem);letter-spacing:.03em;font-variant-numeric:tabular-nums}
+.kalan{color:#CBDCD3;font-size:.95rem}
+.kalan b{color:var(--fildisi);font-variant-numeric:tabular-nums}
+.bar{height:6px;background:#0B2E24;border-radius:999px;margin-top:16px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--altin);border-radius:999px;transition:width 1s linear}
+.ses-satir{display:flex;justify-content:center;margin-top:14px}
+.ses-btn{background:rgba(0,0,0,.18);border:1px solid #2A6350;color:var(--soluk-yesil);border-radius:999px;padding:7px 16px;font-size:.85rem;cursor:pointer}
+.ses-btn.acik{color:var(--altin-acik);border-color:var(--altin)}
+
+.liste{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.vakit{background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:16px;padding:14px 8px;text-align:center}
+.vakit .ad{font-size:.84rem;color:var(--soluk-yesil)}
+.vakit .saat{font-family:'Marcellus',serif;font-size:1.35rem;margin-top:2px;font-variant-numeric:tabular-nums}
+.vakit.aktif{background:var(--altin);border-color:var(--altin)}
+.vakit.aktif .ad{color:#5C4A0D;font-weight:700}
+.vakit.aktif .saat{color:var(--zumrut)}
+.vakit.gecti{opacity:.5}
+
+.soz-kart{margin-top:14px;background:var(--zumrut2);border:1px solid var(--cizgi);border-left:4px solid var(--altin);border-radius:18px;padding:20px 22px;position:relative}
+.soz-kart .tug{color:var(--altin-acik);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+.soz-kart p{margin-top:8px;font-size:1rem;line-height:1.65}
+.soz-kart small{display:block;margin-top:8px;color:var(--soluk-yesil)}
+.yenile{position:absolute;top:14px;right:14px;background:transparent;border:1px solid var(--cizgi);color:var(--soluk-yesil);border-radius:999px;width:34px;height:34px;cursor:pointer;font-size:1rem}
+.yenile:hover{color:var(--altin-acik);border-color:var(--altin)}
+
+.aylik-btn{width:100%;margin-top:14px;background:var(--zumrut2);border:1px solid #2A6350;color:var(--fildisi);border-radius:14px;padding:13px;font-weight:700;font-size:.95rem;cursor:pointer}
+.tablo-wrap{display:none;margin-top:12px;background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:16px;overflow:auto;max-height:400px}
+.tablo-wrap.acik{display:block}
+table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:500px}
+th,td{padding:8px 7px;text-align:center;font-variant-numeric:tabular-nums}
+th{position:sticky;top:0;background:var(--zumrut3);color:var(--altin-acik);font-weight:600}
+tr:nth-child(even) td{background:rgba(255,255,255,.03)}
+tr.bugun td{background:rgba(201,162,39,.22);color:var(--altin-acik);font-weight:700}
+
+/* --- KIBLE --- */
+.kible-kart{background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:26px;padding:28px 22px;text-align:center;margin-top:16px}
+.pusula{position:relative;width:min(270px,74vw);height:min(270px,74vw);margin:18px auto;border-radius:50%;border:2px solid var(--cizgi);background:radial-gradient(circle at 50% 40%, var(--zumrut3), var(--zumrut))}
+.pusula .cizik{position:absolute;inset:8px;border-radius:50%;background:
+  repeating-conic-gradient(from 0deg, rgba(228,201,101,.35) 0deg .8deg, transparent .8deg 30deg)}
+.pusula .yon{position:absolute;font-size:.82rem;color:var(--soluk-yesil);font-weight:800;font-family:'Marcellus',serif}
+.yon.k{top:10px;left:50%;transform:translateX(-50%);color:var(--altin-acik)}
+.yon.g{bottom:10px;left:50%;transform:translateX(-50%)}
+.yon.d{right:13px;top:50%;transform:translateY(-50%)}
+.yon.b{left:13px;top:50%;transform:translateY(-50%)}
+#igne{position:absolute;inset:0;transition:transform .18s ease-out;will-change:transform}
+#igne svg{width:100%;height:100%}
+.kible-derece{font-family:'Marcellus',serif;font-size:1.8rem;color:var(--altin-acik)}
+.kible-alt{color:var(--soluk-yesil);font-size:.9rem;margin-top:6px;line-height:1.55}
+.izin-btn{margin-top:16px;background:var(--altin);color:var(--zumrut);border:none;border-radius:999px;padding:12px 26px;font-weight:800;font-size:.95rem;cursor:pointer}
+.hizali{font-weight:800;min-height:26px;margin-top:10px;font-size:1.02rem}
+.hizali.tam{color:#7BE495}
+.hizali.yakin{color:var(--altin-acik)}
+
+/* --- ZİKİR + ESMA --- */
+.zikir-kart{background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:26px;padding:28px 20px;text-align:center;margin-top:16px}
+.zikir-sec{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:22px}
+.zikir-sec button{border:1.5px solid var(--cizgi);background:transparent;border-radius:999px;padding:8px 15px;font-weight:600;font-size:.86rem;cursor:pointer;color:var(--fildisi)}
+.zikir-sec button.aktif{background:var(--altin);color:var(--zumrut);border-color:var(--altin);font-weight:800}
+.halka-wrap{position:relative;width:210px;height:210px;margin:0 auto}
+.halka-wrap svg{transform:rotate(-90deg)}
+.halka-arka{fill:none;stroke:#0B2E24;stroke-width:12}
+.halka-on{fill:none;stroke:var(--altin);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .2s ease}
+.sayac{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sayac .sayi{font-family:'Marcellus',serif;font-size:3rem;color:var(--altin-acik);line-height:1}
+.sayac .hedef{color:var(--soluk-yesil);font-size:.9rem;margin-top:2px}
+.zikir-adi{font-family:'Marcellus',serif;font-size:1.35rem;color:var(--altin-acik);margin:18px 0 4px}
+.zikir-anlam{color:var(--soluk-yesil);font-size:.9rem;margin-bottom:20px}
+#cekBtn{width:100%;max-width:280px;background:var(--altin);color:var(--zumrut);border:none;border-radius:999px;padding:16px;font-weight:800;font-size:1.05rem;cursor:pointer}
+#cekBtn:active{transform:scale(.96)}
+.tamam{color:var(--altin-acik);font-weight:700;min-height:22px;margin-top:10px;font-size:.95rem}
+.sifirla{margin-top:8px;background:none;border:none;color:var(--soluk-yesil);font-size:.86rem;cursor:pointer;text-decoration:underline}
+.esma-kart{background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:26px;padding:28px 22px;text-align:center;margin-top:16px}
+.esma-arapca{font-family:'Marcellus',serif;font-size:2.3rem;color:var(--altin-acik)}
+.esma-isim{font-family:'Marcellus',serif;font-size:1.4rem;margin-top:6px}
+.esma-anlam{color:var(--soluk-yesil);margin-top:10px;font-size:.96rem;max-width:38ch;margin-left:auto;margin-right:auto;min-height:48px}
+
+/* --- PEYGAMBERLER --- */
+.nebi-giris{margin-top:16px;color:var(--soluk-yesil);font-size:.92rem;text-align:center;line-height:1.6}
+.nebi-grid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px}
+.nebi-chip{background:var(--zumrut2);border:1.5px solid var(--cizgi);border-radius:14px;padding:11px 6px;text-align:center;cursor:pointer;font-weight:700;font-size:.86rem;color:var(--fildisi);transition:all .12s ease}
+.nebi-chip:hover{border-color:var(--altin)}
+.nebi-chip.aktif{background:var(--altin);color:var(--zumrut);border-color:var(--altin)}
+.nebi-detay{display:none;margin-top:16px;background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:24px;padding:26px 24px}
+.nebi-detay.acik{display:block}
+.nebi-baslik{text-align:center;border-bottom:1px solid var(--cizgi);padding-bottom:18px;margin-bottom:18px}
+.nebi-arapca{font-family:'Marcellus',serif;font-size:2rem;color:var(--altin-acik)}
+.nebi-ad{font-family:'Marcellus',serif;font-size:1.6rem;margin-top:4px}
+.nebi-unvan{color:var(--altin-acik);font-size:.9rem;margin-top:4px;font-weight:600}
+.bilgi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.bilgi{background:rgba(0,0,0,.15);border-radius:14px;padding:12px 14px}
+.bilgi .b-ad{color:var(--altin-acik);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.bilgi .b-deger{font-size:.9rem;margin-top:4px;line-height:1.45}
+.bilgi.genis{grid-column:1/-1}
+.nebi-hayat{font-size:.96rem;line-height:1.75}
+.nebi-hayat p{margin-bottom:12px}
+.nebi-not{margin-top:14px;color:var(--soluk-yesil);font-size:.78rem;line-height:1.5;border-top:1px solid var(--cizgi);padding-top:12px}
+
+/* --- DİNİ GÜNLER --- */
+.gun-list{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.dgun{background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:16px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dgun.gecmis{opacity:.45}
+.dgun.siradaki{border-color:var(--altin);background:linear-gradient(150deg,var(--zumrut2),#1E5A47)}
+.dgun .ad{font-weight:700;font-size:.98rem}
+.dgun .tarih{color:var(--soluk-yesil);font-size:.84rem;margin-top:2px}
+.dgun .kalan-gun{font-family:'Marcellus',serif;color:var(--altin-acik);font-size:1.05rem;white-space:nowrap;text-align:right}
+.dgun .kalan-gun small{display:block;font-family:'Figtree',sans-serif;color:var(--soluk-yesil);font-size:.72rem}
+
+/* --- RESİMLER --- */
+.galeri-bolum{margin-top:18px}
+.galeri-bolum h3{font-size:1.15rem;color:var(--altin-acik);margin-bottom:10px;padding-left:4px}
+.galeri{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.foto{background:var(--zumrut2);border:1px solid var(--cizgi);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.foto .kutu{position:relative;aspect-ratio:4/3;background:#0B2E24;cursor:pointer}
+.foto img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}
+.foto .kutu:hover img{transform:scale(1.04)}
+.foto .alt{padding:11px 13px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.foto .baslik{font-size:.86rem;font-weight:600}
+.indir{background:var(--altin);color:var(--zumrut);border:none;border-radius:999px;padding:8px 15px;font-weight:800;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.indir:disabled{opacity:.6;cursor:wait}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(4,20,15,.94);z-index:100;align-items:center;justify-content:center;padding:20px;flex-direction:column;gap:14px}
+.lightbox.acik{display:flex}
+.lightbox img{max-width:100%;max-height:78vh;border-radius:14px;box-shadow:0 10px 50px rgba(0,0,0,.6)}
+.lightbox .lb-bar{display:flex;gap:10px}
+.lb-kapat{background:var(--zumrut2);color:var(--fildisi);border:1px solid var(--cizgi);border-radius:999px;padding:10px 22px;font-weight:700;cursor:pointer}
+
+/* ALT SEKME BAR */
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(11,42,33,.97);backdrop-filter:blur(8px);border-top:1px solid var(--cizgi);display:flex;justify-content:space-around;padding:7px 2px calc(9px + env(safe-area-inset-bottom));z-index:50}
+nav button{background:none;border:none;color:var(--soluk-yesil);font-size:.62rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 5px;border-radius:12px}
+nav button .i{font-size:1.25rem;line-height:1}
+nav button.aktif{color:var(--altin-acik)}
+nav button.aktif .i{transform:scale(1.12)}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="yildizlar" id="splashYildizlar"></div>
+  <svg class="splash-logo" viewBox="0 0 64 64" aria-hidden="true">
+    <rect width="64" height="64" rx="16" fill="#0E3B2E"/>
+    <path d="M14 46 L50 46 L50 42 L46 42 L46 34 Q46 22 32 16 Q18 22 18 34 L18 42 L14 42 Z" fill="#C9A227"/>
+    <circle cx="32" cy="14" r="2.4" fill="#E4C965"/>
+    <path d="M45 12 A8 8 0 1 0 53 22 A6.4 6.4 0 1 1 45 12 Z" fill="#E4C965"/>
+  </svg>
+  <div class="splash-yazi">Nur<span>Vakit</span></div>
+  <div class="splash-alt">Namaz Vakitleri</div>
+  <div class="splash-cubuk"><i></i></div>
+  <button class="splash-video-btn" id="splashVideoBtn">▶ Tanıtımı İzle</button>
+  <div class="splash-atla">Devam etmek için dokun</div>
+</div>
+
+<div class="konfeti-alan" id="konfetiAlan"></div>
+
+<div class="ust">
+  <div class="marka">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="16" fill="#0E3B2E"/>
+      <path d="M14 46 L50 46 L50 42 L46 42 L46 34 Q46 22 32 16 Q18 22 18 34 L18 42 L14 42 Z" fill="#C9A227"/>
+      <circle cx="32" cy="14" r="2.4" fill="#E4C965"/>
+      <path d="M45 12 A8 8 0 1 0 53 22 A6.4 6.4 0 1 1 45 12 Z" fill="#E4C965"/>
+    </svg>
+    <div class="marka-yazi">Nur<span>Vakit</span><small>Namaz Vakitleri</small></div>
+  </div>
+  <button class="konum-chip" id="konumChip" title="Konumu değiştir">
+    <span>📍</span><span class="yer" id="yerAdi">Konum seçilmedi</span>
+  </button>
+  <select id="sehir" aria-label="Şehir seç">
+    <option value="">Şehir seç…</option>
+    <option value="41.0082,28.9784,İstanbul">İstanbul</option>
+    <option value="39.9334,32.8597,Ankara">Ankara</option>
+    <option value="38.4237,27.1428,İzmir">İzmir</option>
+    <option value="40.1885,29.0610,Bursa">Bursa</option>
+    <option value="36.8969,30.7133,Antalya">Antalya</option>
+    <option value="37.0000,35.3213,Adana">Adana</option>
+    <option value="37.8746,32.4932,Konya">Konya</option>
+    <option value="37.0662,37.3833,Gaziantep">Gaziantep</option>
+    <option value="41.0027,39.7168,Trabzon">Trabzon</option>
+    <option value="37.9144,40.2306,Diyarbakır">Diyarbakır</option>
+    <option value="38.7312,35.4787,Kayseri">Kayseri</option>
+    <option value="41.2867,36.3300,Samsun">Samsun</option>
+  </select>
+</div>
+
+<div class="konum-banner goster" id="konumBanner">
+  <button id="konumIste">
+    <span>📍 Konumunu seç — vakitler sana göre hesaplansın</span>
+  </button>
+</div>
+
+<div class="tarih-satir"><span id="miladi">—</span><span class="hicri" id="hicri">—</span></div>
+<div class="durum" id="durum"></div>
+
+<!-- ============ VAKİTLER ============ -->
+<div class="sayfa acik" id="sayfa-vakit">
+  <div class="cuma" id="cumaBanner">🕌 Hayırlı Cumalar! "Üzerine güneş doğan en hayırlı gün, cuma günüdür."</div>
+  <div class="sonraki">
+    <div class="yildiz-katman" id="sonrakiYildiz"></div>
+    <span class="hilal-suzulen">🌙</span>
+    <div class="canli-saat" id="canliSaat">--:--:--<span class="salise">.--</span></div>
+    <div class="canli-saat-alt" id="canliSaatAlt">Yerel Saat</div>
+    <div class="etiket" id="etiket">Sonraki Vakit</div>
+    <div class="vakit-adi" id="sonrakiAd">—</div>
+    <div class="buyuk-saat" id="geriSayim">--:--:--</div>
+    <div class="kalan">Vakit saati: <b id="sonrakiSaat">--:--</b></div>
+    <div class="bar"><i id="bar" style="width:0%"></i></div>
+    <div class="ses-satir"><button class="ses-btn" id="sesBtn">🔕 Ezan sesi kapalı</button></div>
+  </div>
+
+  <div class="liste" id="liste">
+    <div class="vakit" data-k="Imsak"><div class="ad">İmsak</div><div class="saat">--:--</div></div>
+    <div class="vakit" data-k="Sunrise"><div class="ad">Güneş</div><div class="saat">--:--</div></div>
+    <div class="vakit" data-k="Dhuhr"><div class="ad">Öğle</div><div class="saat">--:--</div></div>
+    <div class="vakit" data-k="Asr"><div class="ad">İkindi</div><div class="saat">--:--</div></div>
+    <div class="vakit" data-k="Maghrib"><div class="ad">Akşam</div><div class="saat">--:--</div></div>
+    <div class="vakit" data-k="Isha"><div class="ad">Yatsı</div><div class="saat">--:--</div></div>
+  </div>
+
+  <div class="soz-kart">
+    <button class="yenile" id="hadisYenile" title="Başka hadis göster">↻</button>
+    <div class="tug">✦ Günün Hadisi</div>
+    <p id="hadisMetin">—</p>
+    <small id="hadisKaynak"></small>
+  </div>
+
+  <div class="soz-kart" style="border-left-color:#7BE495">
+    <button class="yenile" id="nasihatYenile" title="Başka nasihat göster">↻</button>
+    <div class="tug" style="color:#7BE495">❋ Günün Nasihati</div>
+    <p id="nasihatMetin">—</p>
+    <small id="nasihatKaynak"></small>
+  </div>
+
+  <button class="aylik-btn" id="aylikBtn">📅 Aylık İmsakiyeyi Göster</button>
+  <div class="tablo-wrap" id="tabloWrap">
+    <table>
+      <thead><tr><th>Gün</th><th>İmsak</th><th>Güneş</th><th>Öğle</th><th>İkindi</th><th>Akşam</th><th>Yatsı</th></tr></thead>
+      <tbody id="tabloBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ KIBLE ============ -->
+<div class="sayfa" id="sayfa-kible">
+  <div class="kible-kart">
+    <h2 style="font-size:1.5rem">🕋 Kıble Pusulası</h2>
+    <div class="pusula">
+      <div class="cizik"></div>
+      <span class="yon k">K</span><span class="yon g">G</span><span class="yon d">D</span><span class="yon b">B</span>
+      <div id="igne">
+        <svg viewBox="0 0 100 100">
+          <line x1="50" y1="50" x2="50" y2="15" stroke="#E4C965" stroke-width="4" stroke-linecap="round"/>
+          <polygon points="50,7 44,19 56,19" fill="#E4C965"/>
+          <line x1="50" y1="50" x2="50" y2="78" stroke="#3E6B5B" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="5.5" fill="#C9A227"/>
+        </svg>
+        <div style="position:absolute;top:17%;left:50%;transform:translateX(-50%);font-size:1.15rem">🕋</div>
+      </div>
+    </div>
+    <div class="kible-derece" id="kibleDerece">—°</div>
+    <div class="kible-alt" id="kibleAlt">Konum seçildiğinde kıble açısı hesaplanır.</div>
+    <div class="hizali" id="hizali"></div>
+    <button class="izin-btn" id="pusulaBtn" style="display:none">Pusula İznini Ver</button>
+    <div class="kible-alt" id="kibleIpucu">Telefonu yere paralel düz tut ve yavaşça dön. Altın ok Kâbe yönünü gösterir; oka döndüğünde ekranda onay görürsün. Bilgisayarda pusula sensörü olmadığından yalnızca açı gösterilir.</div>
+  </div>
+</div>
+
+<!-- ============ ZİKİR ============ -->
+<div class="sayfa" id="sayfa-zikir">
+  <div class="zikir-kart">
+    <div class="zikir-sec">
+      <button class="aktif" data-i="0">Sübhanallah</button>
+      <button data-i="1">Elhamdülillah</button>
+      <button data-i="2">Allahu Ekber</button>
+      <button data-i="3">Salavat</button>
+      <button data-i="4">La ilahe illallah</button>
+    </div>
+    <div class="halka-wrap">
+      <svg width="210" height="210" viewBox="0 0 210 210" aria-hidden="true">
+        <circle class="halka-arka" cx="105" cy="105" r="90"/>
+        <circle class="halka-on" id="halka" cx="105" cy="105" r="90"/>
+      </svg>
+      <div class="sayac">
+        <div class="sayi" id="zSayi">0</div>
+        <div class="hedef">/ <span id="zHedef">33</span> · Tur: <span id="zTur">0</span></div>
+      </div>
+    </div>
+    <div class="zikir-adi" id="zikirAdi">Sübhanallah</div>
+    <div class="zikir-anlam" id="zikirAnlam">Allah'ı tüm noksanlıklardan tenzih ederim.</div>
+    <button id="cekBtn">Zikir Çek</button>
+    <div class="tamam" id="tamamMsg"></div>
+    <button class="sifirla" id="sifirla">Sayacı sıfırla</button>
+  </div>
+  <div class="esma-kart">
+    <h2 style="font-size:1.3rem;margin-bottom:14px">✦ Esmaül Hüsna</h2>
+    <div class="esma-arapca" id="esmaArapca">الرَّحْمَٰن</div>
+    <div class="esma-isim" id="esmaIsim">Er-Rahmân</div>
+    <div class="esma-anlam" id="esmaAnlam">Rahmeti bütün yaratılmışları kuşatan, esirgeyen.</div>
+    <button class="izin-btn" id="esmaBtn">Başka Bir İsim Göster</button>
+  </div>
+</div>
+
+<!-- ============ PEYGAMBERLER ============ -->
+<div class="sayfa" id="sayfa-nebi">
+  <p class="nebi-giris">Kur'an-ı Kerim'de adı geçen 25 peygamberin hayatı. Bir isme dokun, hayat hikâyesini oku.</p>
+  <div class="nebi-grid" id="nebiGrid"></div>
+  <div class="nebi-detay" id="nebiDetay">
+    <div class="nebi-baslik">
+      <div class="nebi-arapca" id="nArapca"></div>
+      <div class="nebi-ad" id="nAd"></div>
+      <div class="nebi-unvan" id="nUnvan"></div>
+    </div>
+    <div class="bilgi-grid" id="nBilgi"></div>
+    <div class="nebi-hayat" id="nHayat"></div>
+    <div class="nebi-not">Not: Peygamberlerin yaşadığı dönemler ve aile bilgileri, Kur'an-ı Kerim ile İslami kaynaklardaki rivayetlere dayanır; kesin tarihler çoğu zaman bilinmediğinden yaklaşık değerlerdir.</div>
+  </div>
+</div>
+
+<!-- ============ DİNİ GÜNLER ============ -->
+<div class="sayfa" id="sayfa-gunler">
+  <div class="gun-list" id="gunList"></div>
+</div>
+
+<!-- ============ RESİMLER ============ -->
+<div class="sayfa" id="sayfa-resimler">
+  <div class="galeri-bolum">
+    <h3>🕋 Mekke — Kâbe ve Mescid-i Haram</h3>
+    <div class="galeri" id="galeriMekke"></div>
+  </div>
+  <div class="galeri-bolum">
+    <h3>🕌 Medine — Mescid-i Nebevi</h3>
+    <div class="galeri" id="galeriMedine"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img id="lbImg" src="" alt="Fotoğraf">
+  <div class="lb-bar">
+    <button class="indir" id="lbIndir">⬇ İndir</button>
+    <button class="lb-kapat" id="lbKapat">Kapat ✕</button>
+  </div>
+</div>
+
+<!-- ============ TANITIM VİDEOSU (sayfanın en altı) ============ -->
+<div class="video-bolum" id="tanitimVideo">
+  <div class="video-ust">
+    <div class="tug" style="color:var(--altin-acik)">🎬 Tanıtım</div>
+    <h2 style="font-size:1.5rem;margin-top:4px">NurVakit Nedir?</h2>
+    <p style="color:var(--soluk-yesil);font-size:.92rem;margin-top:6px">Namaz vakitlerinden kıble pusulasına, zikirmatikten 25 peygamberin hayatına — NurVakit'i bir dakikada tanıyın.</p>
+  </div>
+  <div class="video-cerceve" id="videoCerceve">
+    <video id="tanitimVideoEl" controls playsinline preload="none" poster="icon-512.png">
+      Tarayıcınız video oynatmayı desteklemiyor.
+    </video>
+    <div class="video-yer-tutucu" id="videoYerTutucu">
+      <div class="ytp-ikon">🎬</div>
+      <p>Tanıtım videosu yakında burada olacak</p>
+      <small>İnşallah en kısa sürede eklenecek</small>
+    </div>
+  </div>
+</div>
+
+<nav>
+  <button class="aktif" data-sayfa="vakit"><span class="i">🕌</span>Vakitler</button>
+  <button data-sayfa="kible"><span class="i">🧭</span>Kıble</button>
+  <button data-sayfa="zikir"><span class="i">📿</span>Zikir</button>
+  <button data-sayfa="nebi"><span class="i">📖</span>Nebiler</button>
+  <button data-sayfa="gunler"><span class="i">🌙</span>Günler</button>
+  <button data-sayfa="resimler"><span class="i">🖼️</span>Foto</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
